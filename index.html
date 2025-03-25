@@ -43,6 +43,14 @@
       directionalLight.position.set(5, 3, 5);
       scene.add(directionalLight);
 
+      // Create a container for the globe and text that we can tilt
+      const sceneContainer = new THREE.Group();
+      scene.add(sceneContainer);
+      
+      // Apply a more subtle tilt that makes the text fly correctly
+      sceneContainer.rotation.x = Math.PI / 12; // 15 degrees tilt forward (more upright)
+      sceneContainer.rotation.z = Math.PI / 6; // 30 degrees tilt clockwise (flipped horizontally)
+      
       // Create globe
       const globeRadius = 5;
       const globeGeometry = new THREE.SphereGeometry(globeRadius, 64, 64);
@@ -54,7 +62,7 @@
       });
 
       const globe = new THREE.Mesh(globeGeometry, globeMaterial);
-      scene.add(globe);
+      sceneContainer.add(globe);
 
       // Add meridians to the globe
       const meridianMaterial = new THREE.LineBasicMaterial({
@@ -137,7 +145,7 @@
           
           // Create a group for all letters
           const letterGroup = new THREE.Group();
-          scene.add(letterGroup);
+          sceneContainer.add(letterGroup);
           
           // Create individual letters and position them along the arc
           letters.forEach((letter, i) => {
@@ -195,11 +203,11 @@
           function animate() {
             requestAnimationFrame(animate);
 
-            // Rotate globe
+            // Rotate globe (counter-clockwise viewed from above)
             globe.rotation.y += 0.005;
 
-            // Update the orbit angle
-            orbitAngle -= 0.01;
+            // Update the orbit angle (counter-clockwise movement for text)
+            orbitAngle -= 0.01; // Reversed back to original direction
             
             // Rotate the entire letter group
             letterGroup.rotation.y = orbitAngle;
