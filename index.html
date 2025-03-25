@@ -72,6 +72,8 @@
       });
 
       const record = new THREE.Mesh(recordGeometry, recordMaterial);
+      // Counter-rotate the record to appear level from camera perspective
+      record.rotation.z = -Math.PI / 6; // Counter the scene container's z-rotation
       sceneContainer.add(record);
       
       // Create label
