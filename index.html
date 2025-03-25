@@ -118,55 +118,79 @@
           const textGroup = new THREE.Group();
           scene.add(textGroup);
 
-          const letters = "WAXNERD";
+          const word = "WAXNERD";
           const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
 
-          // Create text ring
-          const ringRadius = globeRadius * 1.8; // Distance from center
-          const textDepth = 0.5;
-          const textHeight = 1.5;
-
-          for (let i = 0; i < letters.length; i++) {
-            const letter = letters.charAt(i);
-            const angle = (i / letters.length) * Math.PI * 2;
-
-            const textGeometry = new THREE.TextGeometry(letter, {
+          // Set up for Universal Studios style logo with curved text
+          const ringRadius = globeRadius * 1.25; // Distance from center of globe (closer)
+          const textDepth = 0.3;
+          const textHeight = 1.0; // Slightly smaller text
+          
+          // Text setup parameters
+          const letters = word.split('');
+          const textObjects = [];
+          
+          // Calculate the total angle the text should span (approx. 90 degrees for more curvature)
+          const textArcAngle = Math.PI / 2; // 90 degrees in radians (more curved)
+          const letterSpacing = textArcAngle / (letters.length - 1);
+          const startAngle = -textArcAngle / 2; // Center the text arc
+          
+          // Create a group for all letters
+          const letterGroup = new THREE.Group();
+          scene.add(letterGroup);
+          
+          // Create individual letters and position them along the arc
+          letters.forEach((letter, i) => {
+            // Calculate position on the arc
+            const angle = startAngle + (i * letterSpacing);
+            
+            // Create a group for this letter to handle positioning and rotation
+            const letterContainer = new THREE.Group();
+            
+            // Create letter geometry
+            const letterGeometry = new THREE.TextGeometry(letter, {
               font: font,
               size: textHeight,
               height: textDepth,
               curveSegments: 12,
               bevelEnabled: true,
-              bevelThickness: 0.1,
-              bevelSize: 0.05,
+              bevelThickness: 0.05,
+              bevelSize: 0.03,
               bevelOffset: 0,
-              bevelSegments: 5,
+              bevelSegments: 3,
             });
-
-            textGeometry.computeBoundingBox();
-            const centerOffset =
-              -0.5 *
-              (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
-
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-            // Position around the ring
-            textMesh.position.x = Math.sin(angle) * ringRadius + centerOffset;
-            textMesh.position.z = Math.cos(angle) * ringRadius;
-
-            // Rotate to face outward
-            textMesh.rotation.y = -angle + Math.PI / 2;
-
-            textObjects.push(textMesh);
-            textGroup.add(textMesh);
-          }
-
-          // Create ring animation
-          const textRing = new THREE.Group();
-          textObjects.forEach((text) => {
-            textRing.add(text);
+            
+            // Center each letter horizontally and vertically
+            letterGeometry.computeBoundingBox();
+            const letterWidth = letterGeometry.boundingBox.max.x - letterGeometry.boundingBox.min.x;
+            letterGeometry.translate(-letterWidth / 2, 0, 0);
+            
+            // Create mesh for the letter
+            const letterMesh = new THREE.Mesh(letterGeometry, textMaterial);
+            
+            // Add letter to its container
+            letterContainer.add(letterMesh);
+            
+            // Position container on the circle
+            letterContainer.position.x = Math.sin(angle) * ringRadius;
+            letterContainer.position.z = Math.cos(angle) * ringRadius;
+            
+            // Rotate container so letter faces outward (away from center)
+            // The correct angle to face outward is facing away from the direction vector to center
+            letterContainer.lookAt(0, 0, 0);
+            letterContainer.rotation.y += Math.PI; // Flip 180 degrees to face outward
+            
+            // Add to the letter group
+            letterGroup.add(letterContainer);
+            textObjects.push({
+              container: letterContainer,
+              initialAngle: angle
+            });
           });
-          scene.add(textRing);
-
+          
+          // Animation state
+          let orbitAngle = 0;
+          
           // Animation loop
           function animate() {
             requestAnimationFrame(animate);
@@ -174,8 +198,11 @@
             // Rotate globe
             globe.rotation.y += 0.005;
 
-            // Rotate text ring in opposite direction
-            textRing.rotation.y -= 0.01;
+            // Update the orbit angle
+            orbitAngle -= 0.01;
+            
+            // Rotate the entire letter group
+            letterGroup.rotation.y = orbitAngle;
 
             renderer.render(scene, camera);
           }
