@@ -8,7 +8,7 @@
       body {
         margin: 0;
         overflow: hidden;
-        background-color: #000;
+        background-color: #fff;
       }
       canvas {
         display: block;
@@ -22,6 +22,7 @@
     <script>
       // Scene setup
       const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
       const camera = new THREE.PerspectiveCamera(
         60,
         window.innerWidth / window.innerHeight,
@@ -30,9 +31,13 @@
       );
       camera.position.z = 20;
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true 
+      });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setClearColor(0xffffff, 1);
       document.body.appendChild(renderer.domElement);
 
       // Lights
@@ -47,74 +52,23 @@
       const sceneContainer = new THREE.Group();
       scene.add(sceneContainer);
       
-      // Apply a more subtle tilt that makes the text fly correctly
-      sceneContainer.rotation.x = Math.PI / 12; // 15 degrees tilt forward (more upright)
+      // Apply a tilt that makes the text face more towards the camera
+      sceneContainer.rotation.x = Math.PI / 18; // 10 degrees tilt forward (more upright)
       sceneContainer.rotation.z = Math.PI / 6; // 30 degrees tilt clockwise (flipped horizontally)
       
       // Create globe
       const globeRadius = 5;
       const globeGeometry = new THREE.SphereGeometry(globeRadius, 64, 64);
       const globeMaterial = new THREE.MeshPhongMaterial({
-        color: 0x0055ff,
+        color: 0xdddddd,
         shininess: 30,
-        transparent: true,
-        opacity: 0.9,
+        transparent: false
       });
 
       const globe = new THREE.Mesh(globeGeometry, globeMaterial);
       sceneContainer.add(globe);
 
-      // Add meridians to the globe
-      const meridianMaterial = new THREE.LineBasicMaterial({
-        color: 0x333333,
-        transparent: true,
-        opacity: 0.5,
-      });
-
-      // Latitude lines
-      for (let i = 0; i < 20; i++) {
-        const angle = (Math.PI / 20) * i;
-        const radius = Math.sin(angle) * globeRadius;
-        const y = Math.cos(angle) * globeRadius;
-
-        const points = [];
-        for (let j = 0; j <= 64; j++) {
-          const theta = (j / 64) * Math.PI * 2;
-          points.push(new THREE.Vector3(
-            radius * Math.cos(theta),
-            0,
-            radius * Math.sin(theta)
-          ));
-        }
-        
-        const latitude = new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(points),
-          meridianMaterial
-        );
-        latitude.position.y = y;
-        latitude.rotation.x = Math.PI / 2;
-        globe.add(latitude);
-      }
-
-      // Longitude lines
-      for (let i = 0; i < 20; i++) {
-        const points = [];
-        for (let j = 0; j <= 64; j++) {
-          const phi = (j / 64) * Math.PI * 2;
-          points.push(new THREE.Vector3(
-            0,
-            globeRadius * Math.cos(phi),
-            globeRadius * Math.sin(phi)
-          ));
-        }
-        
-        const longitude = new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(points),
-          meridianMaterial
-        );
-        longitude.rotation.y = (Math.PI / 10) * i;
-        globe.add(longitude);
-      }
+      // No meridians or geometric lines on the globe
 
       // Create 3D text
       const textObjects = [];
@@ -127,12 +81,12 @@
           scene.add(textGroup);
 
           const word = "WAXNERD";
-          const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+          const textMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
 
           // Set up for Universal Studios style logo with curved text
-          const ringRadius = globeRadius * 1.25; // Distance from center of globe (closer)
-          const textDepth = 0.3;
-          const textHeight = 1.0; // Slightly smaller text
+          const ringRadius = globeRadius * 1.28; // Distance from center of globe
+          const textDepth = 0.35;
+          const textHeight = 1.25; // Moderate text size
           
           // Text setup parameters
           const letters = word.split('');
