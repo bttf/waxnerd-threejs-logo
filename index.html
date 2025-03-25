@@ -76,20 +76,51 @@
       record.rotation.z = -Math.PI / 6; // Counter the scene container's z-rotation
       sceneContainer.add(record);
       
-      // Create label
+      // Create label as two separate parts
       const labelRadius = recordRadius * 0.35;
-      const labelGeometry = new THREE.CylinderGeometry(labelRadius, labelRadius, 0.12, 64);
-      const labelMaterial = new THREE.MeshPhongMaterial({
+      const holeRadius = labelRadius * 0.15;
+      
+      // Top cylinder (visible part)
+      const labelTopGeometry = new THREE.CylinderGeometry(labelRadius, labelRadius, 0.12, 64, 1, false, 0, Math.PI * 2);
+      const labelTopMaterial = new THREE.MeshPhongMaterial({
         color: 0xdddddd,
         shininess: 5
       });
+      const labelTop = new THREE.Mesh(labelTopGeometry, labelTopMaterial);
       
-      const label = new THREE.Mesh(labelGeometry, labelMaterial);
+      // Bottom disk (with hole cutout)
+      const labelBottomGeometry = new THREE.RingGeometry(holeRadius, labelRadius, 64);
+      const labelBottomMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.2,
+        metalness: 0.1,
+        side: THREE.DoubleSide
+      });
+      
+      const labelBottom = new THREE.Mesh(labelBottomGeometry, labelBottomMaterial);
+      labelBottom.rotation.x = Math.PI / 2; // Make it horizontal
+      labelBottom.position.y = -0.061; // Position exactly at bottom of cylinder
+      
+      // Create bottom center hole (smaller black circle)
+      const bottomHoleGeometry = new THREE.CircleGeometry(holeRadius, 32);
+      const bottomHoleMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        side: THREE.DoubleSide
+      });
+      
+      const bottomHole = new THREE.Mesh(bottomHoleGeometry, bottomHoleMaterial);
+      bottomHole.rotation.x = Math.PI / 2; // Make it horizontal
+      bottomHole.position.y = -0.0611; // Slightly below the bottom disk to avoid z-fighting
+      
+      // Create a container for all parts
+      const label = new THREE.Group();
+      label.add(labelTop);
+      label.add(labelBottom);
+      label.add(bottomHole);
       label.position.y = 0.01; // Slightly above the record
       record.add(label);
       
-      // Create center hole
-      const holeRadius = labelRadius * 0.15;
+      // Create center hole for top side
       const holeGeometry = new THREE.CylinderGeometry(holeRadius, holeRadius, 0.14, 32);
       const holeMaterial = new THREE.MeshPhongMaterial({
         color: 0x000000
