@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WAXNERD Spinning Globe</title>
+    <title>WAXNERD Vinyl Record</title>
     <style>
       body {
         margin: 0;
@@ -41,34 +41,76 @@
       document.body.appendChild(renderer.domElement);
 
       // Lights
-      const ambientLight = new THREE.AmbientLight(0x404040, 1);
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-      directionalLight.position.set(5, 3, 5);
+      // Main light from above to highlight the vinyl surface
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      directionalLight.position.set(0, 10, 5);
       scene.add(directionalLight);
+      
+      // Secondary light for better definition
+      const secondaryLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      secondaryLight.position.set(5, 3, 8);
+      scene.add(secondaryLight);
 
-      // Create a container for the globe and text that we can tilt
+      // Create a container for the vinyl record and text that we can tilt
       const sceneContainer = new THREE.Group();
       scene.add(sceneContainer);
       
-      // Apply a tilt that makes the text face more towards the camera
+      // Apply the same tilt as the original globe had
       sceneContainer.rotation.x = Math.PI / 18; // 10 degrees tilt forward (more upright)
       sceneContainer.rotation.z = Math.PI / 6; // 30 degrees tilt clockwise (flipped horizontally)
       
-      // Create globe
-      const globeRadius = 5;
-      const globeGeometry = new THREE.SphereGeometry(globeRadius, 64, 64);
-      const globeMaterial = new THREE.MeshPhongMaterial({
-        color: 0xdddddd,
+      // Create vinyl record
+      const recordRadius = 5;
+      const recordGeometry = new THREE.CylinderGeometry(recordRadius, recordRadius, 0.1, 64);
+      const recordMaterial = new THREE.MeshPhongMaterial({
+        color: 0x111111,
         shininess: 30,
         transparent: false
       });
 
-      const globe = new THREE.Mesh(globeGeometry, globeMaterial);
-      sceneContainer.add(globe);
-
-      // No meridians or geometric lines on the globe
+      const record = new THREE.Mesh(recordGeometry, recordMaterial);
+      sceneContainer.add(record);
+      
+      // Create label
+      const labelRadius = recordRadius * 0.35;
+      const labelGeometry = new THREE.CylinderGeometry(labelRadius, labelRadius, 0.12, 64);
+      const labelMaterial = new THREE.MeshPhongMaterial({
+        color: 0xdddddd,
+        shininess: 5
+      });
+      
+      const label = new THREE.Mesh(labelGeometry, labelMaterial);
+      label.position.y = 0.01; // Slightly above the record
+      record.add(label);
+      
+      // Create center hole
+      const holeRadius = labelRadius * 0.15;
+      const holeGeometry = new THREE.CylinderGeometry(holeRadius, holeRadius, 0.14, 32);
+      const holeMaterial = new THREE.MeshPhongMaterial({
+        color: 0x000000
+      });
+      
+      const hole = new THREE.Mesh(holeGeometry, holeMaterial);
+      hole.position.y = 0.02; // Slightly above the label
+      record.add(hole);
+      
+      // Create record grooves using rings
+      for (let i = 0; i < 25; i++) {
+        const grooveRadius = labelRadius + (recordRadius - labelRadius) * (i / 25);
+        const grooveGeometry = new THREE.RingGeometry(grooveRadius - 0.02, grooveRadius, 64);
+        const grooveMaterial = new THREE.MeshBasicMaterial({
+          color: 0x222222,
+          side: THREE.DoubleSide
+        });
+        
+        const groove = new THREE.Mesh(grooveGeometry, grooveMaterial);
+        groove.rotation.x = Math.PI / 2; // Rotate to lay flat
+        groove.position.y = 0.051; // Just above record surface
+        record.add(groove);
+      }
 
       // Create 3D text
       const textObjects = [];
@@ -84,7 +126,7 @@
           const textMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
 
           // Set up for Universal Studios style logo with curved text
-          const ringRadius = globeRadius * 1.28; // Distance from center of globe
+          const ringRadius = recordRadius * 1.35; // Distance from center of vinyl record
           const textDepth = 0.35;
           const textHeight = 1.25; // Moderate text size
           
@@ -157,8 +199,8 @@
           function animate() {
             requestAnimationFrame(animate);
 
-            // Rotate globe (counter-clockwise viewed from above)
-            globe.rotation.y += 0.005;
+            // Rotate record (counter-clockwise viewed from above)
+            record.rotation.y += 0.005;
 
             // Update the orbit angle (counter-clockwise movement for text)
             orbitAngle -= 0.01; // Reversed back to original direction
